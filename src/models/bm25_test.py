@@ -24,7 +24,7 @@ tokenized_corpus = [
 bm25_model = BM25Okapi(tokenized_corpus)
 
 TEST_PATH = "./data/stage_2_test.json"
-TEST_OUTPUT_FILE_PATH = "./data/dded_BM25_test.json"
+TEST_OUTPUT_FILE_PATH = "./data/added_BM25_test.json"
 
 with open(TEST_PATH, 'r', encoding='utf-8') as f:
   test_data = json.load(f)
