@@ -1,4 +1,5 @@
-from bm25 import add_bm25_to_sample, evalute_list_sample_recall, evaluate_list_sample_precision, evalute_list_sample_f2
+from bm25 import add_bm25_to_sample
+from src.utils.bert_utils import evalute_list_sample_recall, evaluate_list_sample_precision, evalute_list_sample_f2
 import json
 
 from rank_bm25 import BM25Okapi
@@ -29,15 +30,16 @@ TEST_OUTPUT_FILE_PATH = "./data/added_BM25_test.json"
 with open(TEST_PATH, 'r', encoding='utf-8') as f:
   test_data = json.load(f)
 
-TOP_N = 2
+TOP_N = 100
 
 print("Execute on test data")
-add_bm25_to_sample(
+test_data = add_bm25_to_sample(
     test_data,
     TEST_OUTPUT_FILE_PATH,
     law_corpus,
     bm25_model,
-    top_n=TOP_N
+    top_n=TOP_N,
+    dump_data=True
 )
 
 print('Recall score: ')

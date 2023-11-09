@@ -1,6 +1,7 @@
 import numpy as np
 from rank_bm25 import BM25Okapi
 import json
+from src.utils.bert_utils import evalute_list_sample_recall, evaluate_list_sample_precision, evalute_list_sample_f2
 
 data_text_field = "text"
 
@@ -11,40 +12,6 @@ LAW_CORPUS_PATH = "./data/stage_2_law_corpus.json"
 DATA_PATH = "./data/stage_2_data.json"
 
 TEST_PATH = "./data/stage_2_test.json"
-
-def evaluate_sample_recall(given_sample):
-    """
-    Đánh giá điểm recall-score của một sample
-    (dựa vào 2 trường: predict_article và relevant_article)
-    """
-    assert given_sample["predict_articles"] is not None, "Missing predict_articles"
-    assert given_sample["relevant_articles"] is not None, "Missing relevant_articles"
-    assert (
-        len(given_sample["relevant_articles"]) > 0
-    ), "number of relevant articles is 0"
-    list_relevant_article = given_sample["relevant_articles"]
-    list_predicted_article = given_sample["predict_articles"]
-    num_relevant = len(list_relevant_article)
-    num_predicted = len(list_predicted_article)
-    num_true_positive = len(
-        [
-            _relevant_article
-            for _relevant_article in list_relevant_article
-            if _relevant_article in given_sample.get("predict_articles")
-        ]
-    )
-    return num_true_positive / num_relevant
-
-def evalute_list_sample_recall(list_sample):
-    """
-    Đánh giá điểm recall-score của một tập các sample
-    (dựa vào 2 trường: predict_article và relevant_article)
-    """
-    list_recall_score = []
-    for sample in list_sample:
-        recall_i = evaluate_sample_recall(sample)
-        list_recall_score.append(recall_i)
-    return sum(list_recall_score) / (len(list_recall_score) + 1e-10)
 
 def find_article_position(given_statute_corpus, given_article_id):
     """
@@ -62,6 +29,7 @@ def add_bm25_to_sample(
     _bm25_model,
     top_n,
     query_field="query",
+    dump_data=False
 ):
     """
     Thực hiện infer BM25 và ghi kết quả infer vào dữ liệu
@@ -100,66 +68,11 @@ def add_bm25_to_sample(
         # print(sum(list_f2_score) / len(list_f2_score))
     # else:
         # print("Maybe it is a test file, so that it does not have relevant article")
-
-    json.dump(
-        list_data, open(output_file_path, "w", encoding="utf-8"), ensure_ascii=False
-    )
-
-def evaluate_sample_precision(given_sample):
-    """
-    Đánh giá điểm precision-score của một sample
-    (dựa vào 2 trường: predict_article và relevant_article)
-    """
-    assert given_sample["predict_articles"] is not None, "Missing predict_articles"
-    assert given_sample["relevant_articles"] is not None, "Missing relevant_articles"
-    assert (
-        len(given_sample["relevant_articles"]) > 0
-    ), "number of relevant articles is 0"
-    list_relevant_article = given_sample["relevant_articles"]
-    list_predicted_article = given_sample["predict_articles"]
-    num_relevant = len(list_relevant_article)
-    num_predicted = len(list_predicted_article)
-    num_true_positive = len(
-        [
-            _relevant_article
-            for _relevant_article in list_relevant_article
-            if _relevant_article in given_sample.get("predict_articles")
-        ]
-    )
-    return num_true_positive / num_predicted
-
-def evaluate_list_sample_precision(list_sample):
-    list_precision_score = []
-    for sample in list_sample:
-        precision_i = evaluate_sample_precision(sample)
-        list_precision_score.append(precision_i)
-    return sum(list_precision_score) / (len(list_precision_score) + 1e-10)
-
-
-def evaluate_sample_f2(given_sample):
-    """
-    Đánh giá điểm precision-score của một sample
-    (dựa vào 2 trường: predict_article và relevant_article)
-    """
-    recall = evaluate_sample_recall(given_sample)
-    precision = evaluate_sample_precision(given_sample)
-    if precision == 0 and recall == 0:
-        return 0.0
-    return 5 * (precision * recall) / ((4 * precision) + recall)
-
-def evalute_list_sample_f2(list_sample):
-    """
-    Đánh giá điểm recall-score của một tập các sample
-    (dựa vào 2 trường: predict_article và relevant_article)
-    """
-    # YOUR CODE HERE
-    list_f2_score = []
-    for sample in list_sample:
-        f2_i = evaluate_sample_f2(sample)
-        list_f2_score.append(f2_i)
-    return sum(list_f2_score) / (len(list_f2_score) + 1e-10)
-
-from rank_bm25 import BM25Okapi
+    if (dump_data is not False):
+        json.dump(
+            list_data, open(output_file_path, "w", encoding="utf-8"), ensure_ascii=False
+        )
+    return list_data
 
 # Dựng mô hình BM25
 
@@ -172,7 +85,7 @@ tokenized_corpus = [
 
 bm25_model = BM25Okapi(tokenized_corpus)
 
-TOP_N = 2 # @param {type:"integer"}
+TOP_N = 120 # @param {type:"integer"}
 
 OUTPUT_FILE_PATH = "./data/added_BM25_data.json"
 
@@ -180,12 +93,13 @@ with open(DATA_PATH, 'r', encoding='utf-8') as f:
     data = json.load(f)
 
 print("Execute on train data")
-add_bm25_to_sample(
+data = add_bm25_to_sample(
     data,
     OUTPUT_FILE_PATH,
     law_corpus,
     bm25_model,
-    top_n=TOP_N
+    top_n=TOP_N,
+    dump_data=True
 )
 
 print('Recall score: ')

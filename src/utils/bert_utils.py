@@ -4,6 +4,7 @@ ESP = 1e-10
 import torch
 from torch.nn.functional import softmax
 import pandas as pd
+import json
 
 def min_max_normalize_list(a):
     return [(e - min(a)) / (max(a) - min(a) + ESP) for e in a]
@@ -39,7 +40,7 @@ def save_csv_predict_result(
             bert_score = list_bert_score[i][j] if list_bert_score is not None else None
             add_row(qid, article_id, label, bm25_score, bert_score)
 
-    pd.DataFrame(csv_dict).to_csv(running_name, index=False)
+    pd.DataFrame(csv_dict).to_csv("./single-article-BERT_predict_result.csv", index=False)
 
 
 def synthetic_step_output_v2(outputs):
@@ -113,3 +114,120 @@ def synthetic_step_output_v2(outputs):
         save_bm25_predict_list,
         save_bert_predict_list,
     )
+
+def evaluate_sample_recall(given_sample):
+    """
+    Đánh giá điểm recall-score của một sample
+    (dựa vào 2 trường: predict_article và relevant_article)
+    """
+    assert given_sample["predict_articles"] is not None, "Missing predict_articles"
+    assert given_sample["relevant_articles"] is not None, "Missing relevant_articles"
+    assert (
+        len(given_sample["relevant_articles"]) > 0
+    ), "number of relevant articles is 0"
+    list_relevant_article = given_sample["relevant_articles"]
+    list_predicted_article = given_sample["predict_articles"]
+    num_relevant = len(list_relevant_article)
+    num_predicted = len(list_predicted_article)
+    num_true_positive = len(
+        [
+            _relevant_article
+            for _relevant_article in list_relevant_article
+            if _relevant_article in given_sample.get("predict_articles")
+        ]
+    )
+    return num_true_positive / num_relevant
+
+def evalute_list_sample_recall(list_sample):
+    """
+    Đánh giá điểm recall-score của một tập các sample
+    (dựa vào 2 trường: predict_article và relevant_article)
+    """
+    list_recall_score = []
+    for sample in list_sample:
+        recall_i = evaluate_sample_recall(sample)
+        list_recall_score.append(recall_i)
+    return sum(list_recall_score) / (len(list_recall_score) + 1e-10)
+
+def evaluate_sample_precision(given_sample):
+    """
+    Đánh giá điểm precision-score của một sample
+    (dựa vào 2 trường: predict_article và relevant_article)
+    """
+    assert given_sample["predict_articles"] is not None, "Missing predict_articles"
+    assert given_sample["relevant_articles"] is not None, "Missing relevant_articles"
+    assert (
+        len(given_sample["relevant_articles"]) > 0
+    ), "number of relevant articles is 0"
+    list_relevant_article = given_sample["relevant_articles"]
+    list_predicted_article = given_sample["predict_articles"]
+    num_relevant = len(list_relevant_article)
+    num_predicted = len(list_predicted_article)
+    num_true_positive = len(
+        [
+            _relevant_article
+            for _relevant_article in list_relevant_article
+            if _relevant_article in given_sample.get("predict_articles")
+        ]
+    )
+    return num_true_positive / num_predicted
+
+def evaluate_list_sample_precision(list_sample):
+    list_precision_score = []
+    for sample in list_sample:
+        precision_i = evaluate_sample_precision(sample)
+        list_precision_score.append(precision_i)
+    return sum(list_precision_score) / (len(list_precision_score) + 1e-10)
+
+def evaluate_sample_f2(given_sample):
+    """
+    Đánh giá điểm precision-score của một sample
+    (dựa vào 2 trường: predict_article và relevant_article)
+    """
+    recall = evaluate_sample_recall(given_sample)
+    precision = evaluate_sample_precision(given_sample)
+    if precision == 0 and recall == 0:
+        return 0.0
+    return 5 * (precision * recall) / ((4 * precision) + recall)
+
+def evalute_list_sample_f2(list_sample):
+    """
+    Đánh giá điểm recall-score của một tập các sample
+    (dựa vào 2 trường: predict_article và relevant_article)
+    """
+    # YOUR CODE HERE
+    list_f2_score = []
+    for sample in list_sample:
+        f2_i = evaluate_sample_f2(sample)
+        list_f2_score.append(f2_i)
+    return sum(list_f2_score) / (len(list_f2_score) + 1e-10)
+
+def add_bert_to_sample(
+    list_data,
+    _output,
+    set_prediction= True,
+    output_file_path= None
+):
+    num_empty = 0
+    for sample in list_data:
+      try:
+        q_id = sample['question_id']
+        scores = []
+        for q in _output:
+          if q['list_qid'][0] == q_id and q['label'] == 1:
+            article = q['list_article_identity'][0]
+            prob = torch.max(torch.nn.functional.softmax(q['model_predict'].detach().cpu().float(), dim= -1)).item()
+            scores.append((article, prob))
+        articles = {k: v for k, v in scores}
+        articles = dict(sorted(articles.items(), key=lambda item: item[1], reverse= True))
+        sample['bert_candidate'] = list(articles.keys())
+        sample['bert_prob'] = articles
+      except Exception as e:
+        print(e)
+        print(q)
+        print(sample['question_id'])
+        num_empty += 1
+    print(num_empty)
+    json.dump(
+        list_data, open(output_file_path, "w", encoding="utf-8"), ensure_ascii=False
+    ) if output_file_path is not None else None

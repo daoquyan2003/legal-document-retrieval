@@ -7,9 +7,15 @@ from transformers import BertForSequenceClassification
 from src.utils.bert_utils import synthetic_step_output_v2, save_csv_predict_result
 
 class SingleArticleModel(LightningModule):
-    def __init__(self, pretrained_model = "bert-base-multilingual-cased"):
+    def __init__(self,
+        lr: float = 1e-5,
+        eps: float = 1e-8,
+        pretrained_model = "bert-base-multilingual-cased",
+        ):
         super().__init__()
         self.bert_encoder = BertForSequenceClassification.from_pretrained(pretrained_model).to(self.device)
+        self.lr = lr
+        self.eps = eps
         self.validation_step_outputs = []
         self.label_weight = None
 
@@ -34,7 +40,7 @@ class SingleArticleModel(LightningModule):
         model_predict = self.forward(**model_input, label=label)
         label = label.long().to(self.device)
         loss = cross_entropy(input=model_predict, target=label, weight=self.label_weight)
-        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
 
         return {'loss': loss}
 
@@ -50,6 +56,9 @@ class SingleArticleModel(LightningModule):
              'list_article_identity': list_aid,
              'bm25_score': bm25_score}
             )
+        label = label.long().to(self.device)
+        val_loss = cross_entropy(input=model_predict, target=label)
+        self.log("val_loss", val_loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
 
     # Định nghĩa việc cần làm sau mỗi epoch validation
     def on_validation_epoch_end(self) -> None:
@@ -71,7 +80,7 @@ class SingleArticleModel(LightningModule):
         self.on_validation_epoch_end()
 
     def configure_optimizers(self):
-        return torch.optim.AdamW(params=self.parameters(), lr=2e-5, eps=1e-8)
+        return torch.optim.AdamW(params=self.parameters(), lr=self.lr, eps=self.eps)
 
     # Định nghĩa hàm xử lý trong Dataloader, trước khi đưa vào mô hình
     @staticmethod
