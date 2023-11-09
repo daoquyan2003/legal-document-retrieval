@@ -47,7 +47,7 @@ if processed_data_available is False:
 
     bm25_model = BM25Okapi(tokenized_corpus)
 
-    TOP_N = 10
+    TOP_N = 100
 
     OUTPUT_FILE_PATH = "./data/added_BM25_data.json"
     train_data = add_bm25_to_sample(stage_2_data, OUTPUT_FILE_PATH, law_corpus, bm25_model, top_n=TOP_N, dump_data=True)
