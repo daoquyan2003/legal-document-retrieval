@@ -85,7 +85,7 @@ tokenized_corpus = [
 
 bm25_model = BM25Okapi(tokenized_corpus)
 
-TOP_N = 120 # @param {type:"integer"}
+TOP_N = 100 # @param {type:"integer"}
 
 OUTPUT_FILE_PATH = "./data/added_BM25_data.json"
 
