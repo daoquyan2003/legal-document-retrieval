@@ -7,8 +7,9 @@ from src.data.components.context_util import Task3ContextUtility
 from src.data.components.dataset import SingleArticleLegalDataset
 from src.models.lightning_module import SingleArticleModel
 from pytorch_lightning.callbacks import ModelCheckpoint
+from src.utils.bert_utils import evalute_list_sample_recall, evaluate_list_sample_precision, evalute_list_sample_f2
 
-BATCH_SIZE = 4
+BATCH_SIZE = 1
 N_EPOCH = 10
 NUM_WORKERS = 2
 LIMIT_VAL_BATCH = 1
@@ -84,11 +85,41 @@ test_dataloader = DataLoader(
     num_workers=NUM_WORKERS,
 )
 
+def add_bert_to_sample(
+    list_data,
+    _output,
+    set_prediction= True,
+    output_file_path= None
+):
+    num_empty = 0
+    for sample in list_data:
+      try:
+        q_id = sample['question_id']
+        scores = []
+        for q in _output:
+          if q['list_qid'][0] == q_id and q['label'] == 1:
+            article = q['list_article_identity'][0]
+            prob = torch.max(torch.nn.functional.softmax(q['model_predict'].detach().cpu().float(), dim= -1)).item()
+            scores.append((article, prob))
+        articles = {k: v for k, v in scores}
+        articles = dict(sorted(articles.items(), key=lambda item: item[1], reverse= True))
+        sample['bert_candidate'] = list(articles.keys())
+        sample['bert_prob'] = articles
+      except Exception as e:
+        print(e)
+        print(sample['question_id'])
+        print(q)
+        num_empty += 1
+    print(num_empty)
+    json.dump(
+        list_data, open(output_file_path, "w", encoding="utf-8"), ensure_ascii=False
+    ) if output_file_path is not None else None
+
 # Tạo instance logger, làm nhiệm vụ ghi log
 # logger = TensorBoardLogger(save_dir='./logs/', version="single-article-BERT", log_graph=True)
 logger = WandbLogger(save_dir='./logs', project="legal-document-retrieval")
 ckpt_callback = ModelCheckpoint(dirpath= './weights/', 
-                                    filename= 'ldr_{epoch:02d}_{val_loss:0.3f}',
+                                    filename= 'ldr_run3_{epoch:02d}_{val_loss:0.3f}',
                                     monitor= 'val_loss', 
                                     save_on_train_epoch_end= False,
                                     save_top_k= 1,
@@ -109,13 +140,36 @@ trainer = Trainer(
         callbacks=ckpt_callback
     )
 
-model = model_object(lr=5e-6, eps=1e-8)
+RESUME_CHECKPOINT = './weights/ldr_epoch=04_val_loss=0.121.ckpt'
 
-print("Start training...")
-trainer.fit(
-  model=model,
-  train_dataloaders=train_dataloader,
-  val_dataloaders=valid_dataloader,
+model = model_object.load_from_checkpoint(RESUME_CHECKPOINT)
+
+# trainer = Trainer(resume_from_checkpoint="./weights/ldr_epoch=04_val_loss=0.121.ckpt")
+# print("Start validating...")
+# trainer.validate(model=model, dataloaders=valid_dataloader)
+
+print("Start testing...")
+trainer.test(model=model, dataloaders=test_dataloader)
+
+W2V_TEST_PATH = "./data/added_w2v_test_data.json"
+OUTPUT_BERT_TEST_PATH = "./data/added_bert_test_data.json"
+
+with open(W2V_TEST_PATH, 'r', encoding='utf-8') as f:
+  w2v_test_data = json.load(f)
+  
+add_bert_to_sample(
+    w2v_test_data,
+    model.validation_step_outputs,
+    output_file_path= OUTPUT_BERT_TEST_PATH
 )
 
-print("Training finished!")
+print('Recall score: ')
+print(evalute_list_sample_recall(w2v_test_data))
+print('='*10)
+print('Precision score: ')
+print(evaluate_list_sample_precision(w2v_test_data))
+print('='*10)
+print('F2 score: ')
+print(evalute_list_sample_f2(w2v_test_data))
+
+print("Finished!")
