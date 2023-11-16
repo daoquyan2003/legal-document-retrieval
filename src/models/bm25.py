@@ -11,8 +11,6 @@ LAW_CORPUS_PATH = "./data/stage_2_law_corpus.json"
 
 DATA_PATH = "./data/stage_2_data.json"
 
-TEST_PATH = "./data/stage_2_test.json"
-
 def find_article_position(given_statute_corpus, given_article_id):
     """
     Tìm vị trí của văn bản dựa trên ID của văn bản đó
@@ -85,7 +83,7 @@ tokenized_corpus = [
 
 bm25_model = BM25Okapi(tokenized_corpus)
 
-TOP_N = 100 # @param {type:"integer"}
+TOP_N = 100
 
 OUTPUT_FILE_PATH = "./data/added_BM25_data.json"
 

@@ -1,4 +1,4 @@
-from bm25 import add_bm25_to_sample
+from src.models.bm25 import add_bm25_to_sample
 from src.utils.bert_utils import evalute_list_sample_recall, evaluate_list_sample_precision, evalute_list_sample_f2
 import json
 
@@ -9,11 +9,6 @@ data_text_field = "text"
 corpus_text_field = "text"
 
 LAW_CORPUS_PATH = "./data/stage_2_law_corpus.json"
-
-DATA_PATH = "./data/stage_2_data.json"
-
-TEST_PATH = "./data/stage_2_test.json"
-# Dựng mô hình BM25
 
 with open(LAW_CORPUS_PATH, 'r', encoding='utf-8') as f:
   law_corpus = json.load(f)

@@ -8,14 +8,14 @@ setup(
     description="An NLP project for Document Retrieval Task on ALQAC dataset.",
     author="",
     author_email="",
-    url="https://github.com/user/project",
-    install_requires=["lightning"],
+    url="https://github.com/daoquyan2003/legal-document-retrieval",
+    install_requires=["pytorch-lightning"],
     packages=find_packages(),
     # use this to customize global commands available in the terminal after installing the package
     entry_points={
         "console_scripts": [
             "train_command = src.train:main",
-            "eval_command = src.eval:main",
+            "test_command = src.test:main",
         ]
     },
 )

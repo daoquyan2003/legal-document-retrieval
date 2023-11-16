@@ -15,7 +15,7 @@ from sklearn.model_selection import train_test_split
 
 
 BATCH_SIZE = 4
-N_EPOCH = 30
+N_EPOCH = 10
 NUM_WORKERS = 2
 LIMIT_VAL_BATCH = 1
 FAST_DEV_RUN = False

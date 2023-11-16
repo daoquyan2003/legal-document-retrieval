@@ -102,3 +102,4 @@ wcwidth
 yarl
 zipp
 tensorboard
+fasttext

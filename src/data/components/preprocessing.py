@@ -19,9 +19,6 @@ def preprocess_data(dump_data=False):
     LAW_2022_JSON_PATH = "./data/ALQAC_2023_training_data_v1.1/additional_data/ALQAC_2022_training_data/law.json"
     QUESTION_2022_JSON_PATH = "./data/ALQAC_2023_training_data_v1.1/additional_data/ALQAC_2022_training_data/question.json"
 
-    LAW_2021_JSON_PATH = "./data/ALQAC_2023_training_data_v1.1/additional_data/ALQAC_2021/law.json"
-    QUESTION_2021_JSON_PATH = "./data/ALQAC_2023_training_data_v1.1/additional_data/ALQAC_2021/question.json"
-
     LAW_ZALO_JSON_PATH = "./data/ALQAC_2023_training_data_v1.1/additional_data/zalo/zalo_corpus.json"
     QUESTION_ZALO_JSON_PATH = "./data/ALQAC_2023_training_data_v1.1/additional_data/zalo/zalo_question.json"
 
@@ -31,16 +28,10 @@ def preprocess_data(dump_data=False):
     with open(LAW_2022_JSON_PATH, 'r', encoding='utf-8') as f:
         law_corpus_2022 = json.load(f)
 
-    with open(LAW_2021_JSON_PATH, 'r', encoding='utf-8') as f:
-        law_corpus_2021 = json.load(f)
-
     with open(LAW_ZALO_JSON_PATH, 'r', encoding='utf-8') as f:
         law_corpus_zalo = json.load(f)
 
     for item in law_corpus_2022:
-        law_corpus.append(item)
-
-    for item in law_corpus_2021:
         law_corpus.append(item)
 
     for item in law_corpus_zalo:
@@ -52,9 +43,6 @@ def preprocess_data(dump_data=False):
     with open(QUESTION_2022_JSON_PATH, 'r', encoding='utf-8') as f:
         data_2022 = json.load(f)
 
-    with open(QUESTION_2021_JSON_PATH, 'r', encoding='utf-8') as f:
-        data_2021 = json.load(f)
-
     with open(QUESTION_ZALO_JSON_PATH, 'r', encoding='utf-8') as f:
         data_zalo = json.load(f)
 
@@ -62,9 +50,6 @@ def preprocess_data(dump_data=False):
     rename_keys_in_list(data_zalo)
 
     for item in data_2022:
-        data.append(item)
-
-    for item in data_2021:
         data.append(item)
 
     for item in data_zalo:
