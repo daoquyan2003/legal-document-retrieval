@@ -2,7 +2,7 @@
 
 ## Data
 
-The dataset we use includes ALQAC 2023, ALQAC 2022 and Zalo legal datasets.
+The dataset we use includes ALQAC 2023, ALQAC 2022 and Zalo legal datasets. ([Dataset Link](https://drive.google.com/drive/folders/13AioBf_HDsRAFIdVSIXZ6D8jTcvaRRc3?usp=sharing))
 
 The public test set is not used since it does not contain labels for evaluation.
 
