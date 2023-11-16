@@ -1,11 +1,11 @@
 from sklearn.model_selection import train_test_split
 import json
 
-DATA_PATH = "./data/added_BM25_test.json"
+DATA_PATH = "./data/added_w2v_test.json"
 
-VALID_PATH = "./data/added_BM25_valid_data.json"
+VALID_PATH = "./data/added_w2v_valid_data.json"
 
-TEST_PATH = "./data/added_BM25_test_data.json"
+TEST_PATH = "./data/added_w2v_test_data.json"
 
 with open(DATA_PATH, 'r', encoding='utf-8') as f:
   data = json.load(f)
