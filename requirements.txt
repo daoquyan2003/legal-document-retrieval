@@ -22,7 +22,7 @@ filelock==3.12.4
 frozenlist==1.4.0
 fsspec==2023.4.0
 gitdb==4.0.10
-GitPython==3.1.37
+GitPython==3.1.40
 greenlet==3.0.0
 huggingface-hub==0.17.3
 hydra-colorlog==1.2.0
