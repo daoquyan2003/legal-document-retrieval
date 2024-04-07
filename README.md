@@ -10,7 +10,7 @@ We split the dataset into three parts: the training set, the validation set and 
 
 ## Model
 
-We traditional models such as BM25, TF-IDF and Word2Vec (combined with k-NearestNeighbors) to retrieve the most relevant articles of each question (query).
+We use traditional models such as BM25, TF-IDF and Word2Vec (combined with k-NearestNeighbors) to retrieve the most relevant articles of each question (query).
 
 We also utilize the output of BM25 to fine-tune the mBERT classification model. mBERT with its contextual embeddings helps extract more concise and accurate law articles.
 
